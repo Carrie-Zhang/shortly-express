@@ -1,37 +1,39 @@
 const models = require('../models');
 const Promise = require('bluebird');
+const request = require('request');
+
+
+let createSessionCookie = function(req, res, next) {
+  return models.Sessions.create()
+  .then(function(results) {
+    return models.Sessions.get({id: results.insertId});
+  })
+  .then(function(session) {
+    req.session = session;
+    //req.cookies = request.cookie(`cookies=${session.hash}`);
+    res.cookie('cookies', `${session.hash}`);
+    res.cookies = {shortlyid: {value: session.hash}};
+    next();
+  });
+}
 
 module.exports.createSession = (req, res, next) => {
   let cookie = req.cookies;
-  // console.log('----------', req.body);
-  req.session = {};
-
-  if (!cookie) {
-    models.Sessions.create().then(function(results) {
-      models.Sessions.get({id: results.insertId}).then(function(session) {
-        let sessionHash = session.hash;
-        req.session = {
-
-        }
-        res.writeHead(200, {cookie: sessionHash});
-      })
+  //console.log('cookie: ', cookie);
+  if (cookie && Object.keys(cookie).length) {
+    let cookieHash = cookie.shortlyid;
+    return models.Sessions.get({hash: cookieHash})
+    .then(result => {
+      req.session = result;
+      req.session.hash = cookie;
+      next();
+    }).catch(err => {
+      //console.log(err);
+      createSessionCookie(req, res, next);
     })
+  } else {
+    createSessionCookie(req, res, next);
   }
-
-
-
-
-  //
-  // models.Sessions.create().then(function(results) {
-  //   let sessionId = results.insertId;
-  //   res.writeHead(200, {cookie: results});
-  //   models.Sessions.get({id: sessionId}).then(function(result) {
-  //     console.log('hash get results', result);
-  //   });
-  // })
-
-
-  next();
 };
 // check the cookie does exist or not:
   // if exist, get the parsed cookie
