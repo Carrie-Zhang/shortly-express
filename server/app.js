@@ -90,12 +90,30 @@ app.post('/links',
 /************************************************************/
 
 app.post('/signup', (req, res) => {
-   return models.Users.create(req.body)
-   .then((result) => {
-    if (result) {
-      res.redirect('/');
-    }
-  }).catch((err) => res.redirect('/signup'))
+  if (models.Users.create(req.body)) {
+    return models.Sessions.create({userId: result.insertId})
+      .then(() => {
+        res.redirect('/');
+      })
+  } else {
+    // throw new Error('Signup attempt failed');
+    res.redirect('/signup');
+  }
+
+  //  return models.Users.create(req.body)
+  //  .then((result) => {
+  //    console.log('inside of post signup:', result);
+  //    models.Sessions.create({userId: result.insertId})
+  //     .then(() => {
+  //       res.redirect('/');
+  //     })
+  //
+  //   // if (result) {
+  //   //   res.redirect('/');
+  //   //   models.Sessions.create({userId: result.insertId})
+  //   // }
+  // })
+  // .catch((err) => res.redirect('/signup'))
 });
 
 

@@ -1,6 +1,5 @@
 const models = require('../models');
 const Promise = require('bluebird');
-const request = require('request');
 
 
 let createSessionCookie = function(req, res, next) {
@@ -10,9 +9,9 @@ let createSessionCookie = function(req, res, next) {
   })
   .then(function(session) {
     req.session = session;
-    //req.cookies = request.cookie(`cookies=${session.hash}`);
-    res.cookie('cookies', `${session.hash}`);
-    res.cookies = {shortlyid: {value: session.hash}};
+    res.cookie('shortlyid', session.hash);
+    req.cookies = {shortlyid: {value: session.hash}};
+    //console.log(req.cookies);
     next();
   });
 }
@@ -43,3 +42,7 @@ module.exports.createSession = (req, res, next) => {
 /************************************************************/
 // Add additional authentication middleware functions below
 /************************************************************/
+
+// module.exports.verifySession = (req, res, next) => {
+//   models.Sessions.isLoggedIn
+// }
